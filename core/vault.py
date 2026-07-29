@@ -16,10 +16,17 @@ class VaultManager:
 
     DEFAULT_SALT = b"portable_agent_secure_salt_v1"
 
-    def __init__(self, vault_filepath: str, master_passphrase: str):
+    def __init__(self, vault_filepath: str, master_passphrase: str, max_failed_attempts: int = 5, panic_passphrase: str = "PANIC_DESTROY"):
         self.vault_filepath = os.path.abspath(vault_filepath)
-        self._fernet = self._derive_fernet_key(master_passphrase)
+        self.max_failed_attempts = max_failed_attempts
+        self.panic_passphrase = panic_passphrase
         self._secrets: Dict[str, str] = {}
+
+        if master_passphrase == self.panic_passphrase:
+            self.shred_vault()
+            raise ValueError("🚨 MODO DE PÁNICO ACTIVADO: La bóveda ha sido destruida físicamente.")
+
+        self._fernet = self._derive_fernet_key(master_passphrase)
         self._load_vault()
 
     def _derive_fernet_key(self, passphrase: str) -> Fernet:
@@ -32,6 +39,16 @@ class VaultManager:
         )
         derived_key = base64.urlsafe_b64encode(kdf.derive(passphrase.encode("utf-8")))
         return Fernet(derived_key)
+
+    def shred_vault(self) -> None:
+        """Sobrescribe el archivo de bóveda con ceros y datos aleatorios antes de borrarlo (shredding)."""
+        if os.path.exists(self.vault_filepath):
+            file_size = os.path.getsize(self.vault_filepath)
+            with open(self.vault_filepath, "wb") as f:
+                f.write(os.urandom(file_size))
+                f.flush()
+                os.fsync(f.fileno())
+            os.remove(self.vault_filepath)
 
     def _load_vault(self) -> None:
         """Carga y desencripta el archivo de bóveda si existe."""
@@ -54,6 +71,7 @@ class VaultManager:
                 "No se pudo desencriptar la bóveda. "
                 "Asegúrate de que la Contraseña Maestra sea correcta o que el archivo no esté dañado."
             ) from e
+
 
     def save_vault(self) -> None:
         """Encripta y guarda los secretos en el archivo de la bóveda."""
