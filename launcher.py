@@ -11,6 +11,8 @@ from core.agent import PortableAgent
 from tools.google_workspace import GoogleWorkspaceTools
 from tools.system_terminal import SystemTerminalTools
 from tools.self_updater import SelfUpdaterTools
+from core.cleaner import ZeroTraceCleaner
+
 
 
 
@@ -94,8 +96,10 @@ def main():
         try:
             user_prompt = Prompt.ask("[bold green]Tú[/bold green]")
             if user_prompt.strip().lower() in ["salir", "exit", "quit"]:
-                console.print("[bold cyan]👋 ¡Hasta luego! Tus datos permanecen encriptados en la USB.[/bold cyan]")
+                ZeroTraceCleaner.full_zero_trace_exit()
+                console.print("[bold cyan]👋 ¡Hasta luego! Tus datos permanecen encriptados en la USB y la memoria RAM ha sido purgada.[/bold cyan]")
                 break
+
             
             if user_prompt.strip().lower() == "/config":
                 console.print("\n[bold yellow]⚙️ CONFIGURACIÓN DE LA BÓVEDA PORTABLE[/bold yellow]")
