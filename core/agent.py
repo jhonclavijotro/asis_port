@@ -71,15 +71,15 @@ class PortableAgent:
             response = f"🤖 **Resultado de Herramienta**:\n```json\n{json.dumps(tool_output, indent=2, ensure_ascii=False)}\n```\n{context_str}"
         else:
             # Obtener proveedor, api_base y llaves configuradas en la bóveda
-            provider_model = self.vault.get_secret("DEFAULT_MODEL", "gemini/gemini-1.5-flash")
+            provider_model = self.vault.get_secret("DEFAULT_MODEL", "gemini-1.5-flash")
             api_base = self.vault.get_secret("CUSTOM_API_BASE", None)  # Para Ollama/Raspberry Pi o vLLM
             gemini_key = self.vault.get_secret("GEMINI_API_KEY")
             openai_key = self.vault.get_secret("OPENAI_API_KEY")
             anthropic_key = self.vault.get_secret("ANTHROPIC_API_KEY")
 
-            # Si el modelo empieza por gemini- sin prefijo 'gemini/', agregarlo para Google AI Studio API Keys
-            if (provider_model.startswith("gemini-") or "gemini" in provider_model.lower()) and not provider_model.startswith("gemini/"):
-                provider_model = f"gemini/{provider_model}"
+            # Limpiar gemini/gemini- duplicado si existiera
+            if provider_model.startswith("gemini/gemini-"):
+                provider_model = provider_model.replace("gemini/", "", 1)
 
             # Configurar variables de entorno si existen en el Vault
             if gemini_key:
@@ -88,6 +88,7 @@ class PortableAgent:
                 os.environ["OPENAI_API_KEY"] = openai_key
             if anthropic_key:
                 os.environ["ANTHROPIC_API_KEY"] = anthropic_key
+
 
             # Cargar System Prompt Maestro
             system_prompt = (
