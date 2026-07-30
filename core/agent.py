@@ -77,6 +77,10 @@ class PortableAgent:
             openai_key = self.vault.get_secret("OPENAI_API_KEY")
             anthropic_key = self.vault.get_secret("ANTHROPIC_API_KEY")
 
+            # Si el modelo empieza por gemini- sin prefijo 'gemini/', agregarlo para Google AI Studio API Keys
+            if (provider_model.startswith("gemini-") or "gemini" in provider_model.lower()) and not provider_model.startswith("gemini/"):
+                provider_model = f"gemini/{provider_model}"
+
             # Configurar variables de entorno si existen en el Vault
             if gemini_key:
                 os.environ["GEMINI_API_KEY"] = gemini_key
@@ -108,8 +112,9 @@ class PortableAgent:
             except Exception as e:
                 response = (
                     f"🤖 **No se pudo conectar al modelo '{provider_model}'**: {e}\n"
-                    f"💡 *Sugerencia*: Si usas un LLM local (Ollama/Raspberry Pi) o Gemini, guarda tus configuraciones en '/config'."
+                    f"💡 *Sugerencia*: Si utilizas Gemini de Google AI Studio, asegúrate de haber configurado tu GEMINI_API_KEY en '/config'."
                 )
+
 
 
         # 5. Guardar respuesta del asistente en memoria episódica
