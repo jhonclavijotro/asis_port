@@ -107,6 +107,10 @@ class PortableAgent:
                 kwargs = {"model": provider_model, "messages": messages}
                 if api_base:
                     kwargs["api_base"] = api_base
+                
+                # Si es un modelo Gemini y no trae prefijo de proveedor en el nombre, indicar proveedor explícito
+                if "gemini" in provider_model.lower() and "/" not in provider_model:
+                    kwargs["custom_llm_provider"] = "gemini"
 
                 completion = litellm.completion(**kwargs)
                 response = f"🤖 [{provider_model}]: {completion.choices[0].message.content}"
@@ -115,6 +119,7 @@ class PortableAgent:
                     f"🤖 **No se pudo conectar al modelo '{provider_model}'**: {e}\n"
                     f"💡 *Sugerencia*: Si utilizas Gemini de Google AI Studio, asegúrate de haber configurado tu GEMINI_API_KEY en '/config'."
                 )
+
 
 
 
